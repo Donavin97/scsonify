@@ -29,7 +29,7 @@ To install scsonify, there are a few things needed:
 
 to install the software, simply do the following:
 
-- Download seiscomp from [Here] (https://www.seiscomp.de/downloader/), or build it from source.
+- Download seiscomp from [Here](https://www.seiscomp.de/downloader/), or build it from source.
 - Install NumPy and SciPy:
   -pip install numpy scipy
 - git clone https://github.com/Donavin97/scsonify.git
