@@ -100,7 +100,7 @@ I hope this can be of use to scientists, who wish to explore seismic data proces
 Any contributions or suggestions are welcomed by the comunity.
 Contributions can be submitted via pull requests to this repository.
 If you wish to contact me, an email can be sent to:
-(donavinliebgott@gmail.com)
+(mailto:donavinliebgott@gmail.com)
 ## Software links
 You can find the software used by this repo in the following table.
 | Software | link |
