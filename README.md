@@ -106,5 +106,5 @@ You can find the software used by this repo in the following table.
 | Software | link |
 |--------|--------|
 | SeisComP | [Download](https://www.seiscomp.de/) |
-| NumPy | [Download](https:://www.numpy.org/) |
+| NumPy | [Download](https://www.numpy.org/) |
 | SciPy | [Download](https://www.scipy.org/) |
