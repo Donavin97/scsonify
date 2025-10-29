@@ -105,6 +105,6 @@ If you wish to contact me, an email can be sent to:
 You can find the software used by this repo in the following table.
 | Software | link |
 |--------|--------|
-| SeisComP | (https://www.seiscomp.de/) |
-| NumPy | (https:://www.numpy.org/) |
-| SciPy | (https://www.scipy.org/) |
+| SeisComP | [Download](https://www.seiscomp.de/) |
+| NumPy | [Download](https:://www.numpy.org/) |
+| SciPy | [Download](https://www.scipy.org/) |
