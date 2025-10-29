@@ -2,12 +2,12 @@
 seismic sonification tool within SeisComP
 
 ## What is this?
-Scsonify is an addon to the whidely used SeisComP package for seismic data analysis, processing and aquisition.
+Scsonify is an addon to the whidely used SeisComP package for seismic data analysis, processing and acquisition.
 The tool sonifies (makes data audible) using a simple data compression technique, making seismic data accessible to all, as well as providing new insights into the complexity of earthquakes.
 ## Features.
 - Integrates seemlessly with in the SeisComP framework.
 - Commandline driven with simple commands that can be adjusted according to user needs.
-- Standrd filtering of data, using the builtin SeisComP filter syntax.
+- Standard filtering of data, using the builtin SeisComP filter syntax.
 - Outputs resulting sonifications to a .wav file.
 - Multiple data sources : choose from a whide selection of data sources provided by local or remote hosts
   - Realtime data (SeedLink protocol)
@@ -28,8 +28,8 @@ To install scsonify, there are a few things needed:
 - Scipy.
 
 to install the software, simply do the following:
-```
-- Download seiscomp from [Here](https://www.seiscomp.de/downloader/), or build it from source.
+
+- Download seiscomp from [Here] (https://www.seiscomp.de/downloader/), or build it from source.
 - Install NumPy and SciPy:
   -pip install numpy scipy
 - git clone https://github.com/Donavin97/scsonify.git
@@ -37,12 +37,10 @@ to install the software, simply do the following:
 or using github-cli:
 - gh repo clone Donavin97/scsonify
 - cd scsonify && cp scsonify ~/seiscomp/bin/
-```
 
 ## Usage.
 ```
 scsonify -h
-```
 ```
 Records:
   --record-driver-list       List all supported RecordStream drivers.
@@ -71,7 +69,7 @@ Processing:
                              (e.g., a factor of 100 will speed up the data 100
                              times).
   -f [ --filter ] arg        Specify filter to apply to seismic data
-```
+
 to apply scsonify on some data, use the following syntax:
 ```
 scsonify -I fdsnws://service.iris.edu -T "2025-10-01 04:00~2025-10-01 05:00" -f "RMHP(10)>>ITAPER(30)>>BW(4,2,15)" -o output.wav -S 160 --stream OK.MORE.--.HHZ
@@ -106,7 +104,7 @@ If you wish to contact me, an email can be sent to:
 ## Software links
 You can find the software used by this repo in the following table.
 | Software | link |
-|--------|--------|------|
+|--------|--------|
 | SeisComP | (https://www.seiscomp.de/) |
 | NumPy | (https:://www.numpy.org/) |
 | SciPy | (https://www.scipy.org/) |
