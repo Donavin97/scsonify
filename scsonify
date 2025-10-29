@@ -1,0 +1,173 @@
+#!/usr/bin/env seiscomp-python
+
+import sys
+import seiscomp.client as client
+import seiscomp.core as core
+import numpy as np
+from scipy.io import wavfile
+from scipy.signal import resample
+from seiscomp import math, io
+
+def str2time(timeString):
+    return core.Time.FromString(timeString)
+
+class App(client.StreamApplication):
+    def __init__(self, argc, argv):
+        super().__init__(argc, argv)
+        self.setMessagingEnabled(False)
+        self.setDatabaseEnabled(False, False)
+        self.stream = None
+        self.start_time = None
+        self.end_time = None
+        self.time_window = None
+        self.output_file = None
+        self.speed_factor = None
+        self.all_data = []
+        self.recFS = None
+        self.filter = None
+        self.data = []
+
+    def createCommandLineDescription(self):
+        self.commandline().addGroup("Time")
+        self.commandline().addStringOption("Time", "time-window,T",
+            "Time window of data to sonify in format start_time~end_time, e.g., 2023-10-01T00:00:00~2023-10-01T01:00:00")
+        self.commandline().addGroup("Output")
+        self.commandline().addStringOption("Output", "output-file,o",
+            "Specify file to write sonified seismic data to.")
+        self.commandline().addGroup("Input")
+        self.commandline().addStringOption("Input", "stream",
+            "Specify seismic stream to sonify")
+        self.commandline().addGroup("Processing")
+        self.commandline().addStringOption("Processing", "speed-factor,S",
+            "Speed up factor to make seismic data audible: (e.g., a factor of 100 will speed up the data 100 times).")
+        self.commandline().addStringOption("Processing", "filter,f",
+            "Specify filter to apply to seismic data")
+        return True
+
+    def init(self):
+        if not super().init():
+            return False
+
+        # Retrieve output file
+        try:
+            self.output_file = self.commandline().optionString("output-file")
+        except:
+            print("Warning: No output file specified.")
+            self.output_file = "output.wav"  # default filename
+
+        # Retrieve and parse time-window argument
+        try:
+            time_window_str = self.commandline().optionString("time-window")
+            if time_window_str:
+                # Expect format: start_time~end_time
+                parts = time_window_str.split('~')
+                if len(parts) == 2:
+                    self.start_time = str2time(parts[0])
+                    self.end_time = str2time(parts[1])
+                else:
+                    print("Error: Invalid time window format. Please use start_time~end_time.")
+                    return False
+            else:
+                print("Warning: No time window specified; defaulting to full data range.")
+                # Optionally, set default start/end here
+        except Exception as e:
+            print(f"Error reading time window: {e}")
+            return False
+
+        # Retrieve stream name
+        try:
+            self.stream = self.commandline().optionString("stream")
+        except:
+            print("Warning: No stream specified.")
+            self.stream = None
+
+        # Filter the seismic data
+        try:
+            self.filter = self.commandline().optionString("filter")
+        except:
+            print("Using raw data without filtering")
+            self.filter = "RAW()"
+
+        # Set start and end times for record stream
+        if self.start_time and self.end_time:
+            print(f"Configured Time Window: {self.start_time} to {self.end_time}")
+        else:
+            print("Warning: Start or end time not set properly.")
+            return False
+
+        self.recordStream().setStartTime(self.start_time)
+        self.recordStream().setEndTime(self.end_time)
+
+        # Parse stream component: e.g., "NET.STA.LOC.CHA"
+        if self.stream:
+            try:
+                net, sta, loc, cha = self.stream.split('.')
+                stream_obj = self.recordStream().addStream(net, sta, loc, cha)
+            except Exception as e:
+                print(f"Error adding stream: {e}")
+                return False
+        else:
+            print("No stream provided, proceeding without setting a specific stream.")
+
+        # Retrieve speed factor
+        try:
+            self.speed_factor = float(self.commandline().optionString("speed-factor"))
+        except:
+            print("Warning: No speed factor specified; defaulting to 160.")
+            self.speed_factor = 160.0
+
+        filterIIR = math.InPlaceFilterF.Create(self.filter)
+        self.recordFilter = io.RecordIIRFilterF(filterIIR)
+        self.demuxer = io.RecordDemuxFilter(self.recordFilter)
+
+        return True
+
+    def handleRecord(self, raw_rec):
+
+        rec = self.demuxer.feed(raw_rec)
+        if not rec:
+            return
+
+        if rec is None or rec.samplingFrequency() <= 0:
+            return
+        data = rec.data().numpy()
+        self.all_data.append(data.astype(np.int32))
+        self.recFS = rec.samplingFrequency()
+        self.data.append(data.astype(np.int32))
+
+    def handleEndAcquisition(self):
+        if not self.all_data:
+            print("No data collected.")
+            return
+
+        concatenated_data = np.concatenate(self.data)
+
+        # Determine target sample rate based on speed factor
+        target_sampling_rate = 44100.0 / self.speed_factor
+        # Calculate new number of samples for resampling
+        num_samples = int(len(concatenated_data) * target_sampling_rate / self.recFS)
+
+        # Resample data to target sampling rate
+        resampled_data = resample(concatenated_data, num_samples)
+
+        # Normalize the data
+        resampled_data -= np.mean(resampled_data)
+        max_abs_value = np.max(np.abs(resampled_data))
+        if max_abs_value > 0:
+            normalized_data = resampled_data / max_abs_value
+        else:
+            normalized_data = resampled_data
+
+        # Convert to 16-bit PCM
+        audio_data = (normalized_data * 32767).astype(np.int16)
+
+        # Save as WAV file at 44100 Hz
+        wavfile.write(self.output_file, 44100, audio_data)
+        print(f"Sonification completed and saved as {self.output_file}.")
+
+def main():
+    app = App(len(sys.argv), sys.argv)
+    sys.exit(app())
+
+if __name__ == "__main__":
+    main()
